@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Painel do Barbeiro | BarberPro</title>
+  <meta name="description" content="Acesse o painel administrativo da BarberPro.">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    .login-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+    .login-card {
+      max-width: 420px;
+      width: 100%;
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .login-logo .logo-box {
+      width: 56px; height: 56px;
+      background: var(--charcoal);
+      border-radius: var(--r-card);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.75rem;
+      margin: 0 auto 16px;
+      box-shadow: var(--shadow-btn);
+    }
+    .login-logo h1 {
+      font-size: 1.375rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .login-logo p { color: var(--muted); font-size: 0.9375rem; }
+
+    .form-stack { display: flex; flex-direction: column; gap: 16px; }
+    .password-wrap { position: relative; }
+    .password-wrap .form-control { padding-right: 44px; }
+    .toggle-pw {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 1rem; padding: 4px;
+    }
+
+    .divider-text {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--muted); font-size: 0.875rem;
+      margin: 8px 0;
+    }
+    .divider-text::before,
+    .divider-text::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .error-msg {
+      display: none;
+      padding: 10px 14px;
+      background: rgba(192,57,43,0.06);
+      border: 1px solid rgba(192,57,43,0.2);
+      border-radius: var(--r-std);
+      color: #c0392b;
+      font-size: 0.875rem;
+    }
+    .error-msg.show { display: block; }
+
+    .security-note {
+      display: flex; align-items: center; gap: 6px;
+      justify-content: center;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV minimal -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-logo">
+      <span class="logo-icon">✂</span>
+      BarberPro
+    </a>
+    <a href="../index.html" class="caption muted" style="text-decoration:underline;">← Site do cliente</a>
+  </div>
+</nav>
+
+<div class="login-wrap">
+  <div class="login-card anim-fade-up">
+
+    <div class="login-logo">
+      <div class="logo-box">✂</div>
+      <h1>Painel do Barbeiro</h1>
+      <p>Acesse sua área administrativa</p>
+    </div>
+
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-stack">
+
+        <div id="error-msg" class="error-msg">
+          Usuário ou senha incorretos. Tente novamente.
+        </div>
+
+        <div class="form-group">
+          <label for="usuario">Usuário</label>
+          <input class="form-control" type="text" id="usuario" name="usuario"
+            placeholder="seu@email.com" autocomplete="username" required>
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <div class="password-wrap">
+            <input class="form-control" type="password" id="senha" name="senha"
+              placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="toggle-pw" onclick="togglePw()" id="pw-toggle">👁</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="btn-login">
+          Entrar no painel →
+        </button>
+
+      </div>
+    </form>
+
+    <div class="security-note">
+      🔒 Acesso seguro — senhas armazenadas com criptografia
+    </div>
+
+  </div>
+</div>
+
+<script>
+  async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-login');
+    const err = document.getElementById('error-msg');
+    const user = document.getElementById('usuario').value.trim();
+    const pass = document.getElementById('senha').value;
+
+    err.classList.remove('show');
+    btn.textContent = 'Entrando...';
+    btn.disabled = true;
+    btn.style.opacity = '0.65';
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario: user, senha: pass })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        sessionStorage.setItem('admin_token', data.token);
+        window.location.href = 'agenda.html';
+      } else {
+        err.classList.add('show');
+        err.textContent = data.error || 'Erro ao fazer login';
+        btn.textContent = 'Entrar no painel →';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        document.getElementById('senha').value = '';
+        document.getElementById('senha').focus();
+      }
+    } catch (error) {
+      console.error(error);
+      err.classList.add('show');
+      err.textContent = 'Erro de conexão';
+      btn.textContent = 'Entrar no painel →';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+
+  function togglePw() {
+    const inp = document.getElementById('senha');
+    const btn = document.getElementById('pw-toggle');
+    if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+    else { inp.type = 'password'; btn.textContent = '👁'; }
+  }
+</script>
+</body>
+</html>

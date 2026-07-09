@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda | Painel BarberPro</title>
+  <meta name="description" content="Visualize e gerencie sua agenda de atendimentos.">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Day tabs */
+    .day-tabs {
+      display: flex; gap: 6px;
+      overflow-x: auto; padding-bottom: 4px;
+    }
+    .day-tab {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      border-radius: var(--r-std);
+      border: 1px solid var(--border);
+      font-size: 0.875rem;
+      cursor: pointer;
+      background: var(--cream);
+      color: var(--muted);
+      transition: all 0.12s;
+      text-align: center;
+      min-width: 80px;
+    }
+    .day-tab:hover { border-color: var(--c40); color: var(--charcoal); }
+    .day-tab.active {
+      background: var(--charcoal);
+      color: var(--off-white);
+      border-color: var(--charcoal);
+      box-shadow: var(--shadow-btn);
+    }
+    .day-tab .tab-day  { font-weight: 600; font-size: 1rem; display:block; }
+    .day-tab .tab-week { font-size: 0.75rem; opacity: 0.7; display:block; }
+
+    /* Timeline */
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+    .timeline-slot {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 6px 0;
+      border-top: 1px solid var(--c03);
+    }
+    .timeline-time {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      width: 44px;
+      flex-shrink: 0;
+      padding-top: 10px;
+      text-align: right;
+    }
+    .timeline-content { flex: 1; min-height: 40px; }
+
+    /* Action menu */
+    .appt-actions {
+      display: flex; gap: 6px;
+      margin-top: 8px;
+    }
+
+    /* View toggle */
+    .view-toggle {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--r-std);
+      overflow: hidden;
+    }
+    .view-btn {
+      padding: 7px 16px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: none;
+      background: var(--cream);
+      color: var(--muted);
+      transition: all 0.12s;
+    }
+    .view-btn.active { background: var(--charcoal); color: var(--off-white); }
+
+    /* Status legend */
+    .legend {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      font-size: 0.8125rem; color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Week grid */
+    .week-grid {
+      display: grid;
+      grid-template-columns: 48px repeat(6, 1fr);
+      gap: 4px;
+    }
+    .week-col-header {
+      text-align: center;
+      padding: 8px 4px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .week-col-header.today { color: var(--charcoal); }
+    .week-slot {
+      border: 1px solid var(--border);
+      border-radius: var(--r-micro);
+      min-height: 36px;
+      font-size: 0.75rem;
+      padding: 4px 6px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.12s;
+    }
+    .week-slot:hover { border-color: var(--c40); }
+    .week-slot.has-appt {
+      background: rgba(28,28,28,0.06);
+      border-color: rgba(28,28,28,0.15);
+    }
+    .week-slot.blocked { background: rgba(28,28,28,0.03); }
+    .time-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: right;
+      padding: 0 8px 0 0;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="agenda.html">
+      <span class="logo-mark">✂</span>
+      BarberPro
+    </a>
+    <ul class="sidebar-nav">
+      <li><a href="agenda.html" class="active"><span class="icon">📅</span> Agenda</a></li>
+      <li><a href="servicos.html"><span class="icon">✂</span> Serviços</a></li>
+      <li><a href="bloqueios.html"><span class="icon">🚫</span> Bloqueios</a></li>
+      <li style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+        <a href="../index.html"><span class="icon">🌐</span> Site do cliente</a>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <div style="font-size:0.8125rem; color:var(--muted); margin-bottom:8px;">Logado como</div>
+      <div style="font-size:0.875rem; font-weight:500; color:var(--charcoal);">Admin</div>
+      <a href="login.html" class="btn btn-ghost btn-sm btn-full mt-8">Sair</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <!-- Topbar -->
+    <div class="admin-topbar">
+      <div>
+        <div style="font-size:1rem; font-weight:600; color:var(--charcoal);">Agenda</div>
+        <div class="caption">Gerencie seus atendimentos</div>
+      </div>
+      <div class="flex gap-12 items-center">
+        <div class="view-toggle">
+          <button class="view-btn active" onclick="setView('day', this)">Dia</button>
+          <button class="view-btn" onclick="setView('week', this)">Semana</button>
+        </div>
+        <a href="bloqueios.html" class="btn btn-ghost btn-sm">🚫 Bloquear horário</a>
+      </div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- Stats row -->
+      <div class="grid-3 mb-32">
+        <div class="stat-card">
+          <div class="stat-num">8</div>
+          <div class="stat-label">Atendimentos hoje</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">6</div>
+          <div class="stat-label">Confirmados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">R$ 295</div>
+          <div class="stat-label">Faturamento estimado</div>
+        </div>
+      </div>
+
+      <!-- Day Tabs -->
+      <div class="day-tabs mb-24" id="day-tabs">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Status legend -->
+      <div class="legend mb-24">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--charcoal)"></span> Agendado</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Concluído</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#c0392b"></span> Não compareceu</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--border-i)"></span> Bloqueado</div>
+      </div>
+
+      <!-- Day View -->
+      <div id="view-day">
+        <div class="card" style="padding:0; overflow:hidden;">
+          <div class="timeline" id="timeline">
+            <!-- injected by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Week View (hidden by default) -->
+      <div id="view-week" style="display:none;">
+        <div class="card" style="padding:16px; overflow-x:auto;">
+          <div class="week-grid" id="week-grid">
+            <!-- injected by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Modal -->
+      <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+          <div class="modal-title" id="modal-title">Atendimento</div>
+          <div class="modal-body" id="modal-body"></div>
+          <div class="modal-footer" id="modal-footer"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- Demo data ---
+  const appts = [
+    { time:'08:30', name:'Carlos Mendes',  svc:'Corte',            price:'R$ 35', status:'done',      phone:'(11) 98888-1234' },
+    { time:'09:00', name:'Rafael Lima',    svc:'Barba',            price:'R$ 25', status:'done',      phone:'(11) 97777-5678' },
+    { time:'09:30', name:'',               svc:'',                 price:'',      status:'blocked',   note:'Almoço' },
+    { time:'10:30', name:'Marcos Souza',   svc:'Combo Corte+Barba',price:'R$ 55', status:'scheduled', phone:'(11) 96666-9012' },
+    { time:'11:00', name:'João Paulo',     svc:'Acabamento',       price:'R$ 15', status:'scheduled', phone:'(11) 95555-3456' },
+    { time:'12:00', name:'',               svc:'',                 price:'',      status:'blocked',   note:'Almoço' },
+    { time:'14:00', name:'Pedro Alves',    svc:'Corte',            price:'R$ 35', status:'scheduled', phone:'(11) 94444-7890' },
+    { time:'14:30', name:'Lucas Ferreira', svc:'Barba',            price:'R$ 25', status:'noshow',    phone:'(11) 93333-1234' },
+    { time:'15:00', name:'Diego Rocha',    svc:'Hidratação',       price:'R$ 40', status:'scheduled', phone:'(11) 92222-5678' },
+    { time:'16:00', name:'Thiago Costa',   svc:'Corte',            price:'R$ 35', status:'scheduled', phone:'(11) 91111-9012' },
+    { time:'17:00', name:'André Santos',   svc:'Combo Corte+Barba',price:'R$ 55', status:'scheduled', phone:'(11) 90000-3456' },
+  ];
+
+  const allSlots = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','13:00','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
+
+  const statusDot  = { scheduled:'var(--charcoal)', done:'#16a34a', noshow:'#c0392b', blocked:'var(--border-i)' };
+  const statusLabel = { scheduled:'Agendado', done:'Concluído', noshow:'Não compareceu', blocked:'Bloqueado' };
+  const statusBadge = { scheduled:'badge', done:'badge-success', noshow:'badge-danger', blocked:'badge' };
+
+  // Day tabs
+  function renderDayTabs() {
+    const today = new Date();
+    let html = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()];
+      html += `<div class="day-tab${i===0?' active':''}" onclick="selectDay(this)">
+        <span class="tab-day">${d.getDate()}</span>
+        <span class="tab-week">${dow}</span>
+      </div>`;
+    }
+    document.getElementById('day-tabs').innerHTML = html;
+  }
+
+  function selectDay(el) {
+    document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderTimeline();
+  }
+
+  // Timeline
+  function renderTimeline() {
+    const apptMap = {};
+    appts.forEach(a => apptMap[a.time] = a);
+
+    let html = '';
+    allSlots.forEach(slot => {
+      const a = apptMap[slot];
+      let content = '';
+      if (a) {
+        if (a.status === 'blocked') {
+          content = `<div class="appt-block" style="border-color:var(--c03); background:var(--c03);">
+            <div class="appt-dot blocked"></div>
+            <div class="appt-info">
+              <div class="appt-name" style="color:var(--muted);">🚫 ${a.note || 'Horário bloqueado'}</div>
+            </div>
+          </div>`;
+        } else {
+    const container = document.getElementById('timeline');
+    
+    // Filter logic
+    let filtered = appointments;
+    if (currentFilter === 'today') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      filtered = appointments.filter(a => a.date.startsWith(todayStr));
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Nenhum agendamento para este período.</div>';
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(app => {
+      const time = new Date(app.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const statusClass = app.status === 'DONE' ? 'status-done' : (app.status === 'NOSHOW' ? 'status-noshow' : (app.status === 'CANCELLED' ? 'status-noshow' : ''));
+      const statusLabelText = app.status === 'DONE' ? 'Concluído' : (app.status === 'NOSHOW' ? 'Não veio' : (app.status === 'CANCELLED' ? 'Cancelado' : 'Agendado'));
+      
+      html += `
+      <div class="timeline-slot">
+        <div class="timeline-time">${time}</div>
+        <div class="timeline-content">
+          <div class="appt-block ${statusClass}">
+            <div class="appt-dot"></div>
+            <div class="appt-info">
+              <div class="appt-name">${app.clientName}</div>
+              <div class="appt-detail">Serviço: ${app.service.name} · ${app.clientPhone}</div>
+              ${app.status === 'SCHEDULED' ? `
+              <div class="appt-actions">
+                <button class="btn btn-sm btn-cream" onclick="updateStatus(${app.id}, 'DONE')">✓ Concluído</button>
+                <button class="btn btn-sm btn-cream" onclick="updateStatus(${app.id}, 'NOSHOW')">✗ Não veio</button>
+              </div>
+        <div class="timeline-time">${slot}</div>
+        <div class="timeline-content">${content}</div>
+      </div>`;
+    });
+    document.getElementById('timeline').innerHTML = html;
+  }
+
+  function markStatus(time, status) {
+    const appt = appts.find(a => a.time === time);
+    if (appt) { appt.status = status; renderTimeline(); }
+  }
+
+  // Week view
+  function renderWeekGrid() {
+    const today = new Date();
+    const dows = ['Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const hours = ['08:00','09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00'];
+
+    let html = '<div class="time-label"></div>';
+    dows.forEach((d,i) => {
+      const date = new Date(today); date.setDate(today.getDate() + i);
+      html += `<div class="week-col-header${i===0?' today':''}">${d}<br><small style="font-weight:400;opacity:.7">${date.getDate()}</small></div>`;
+    });
+
+    hours.forEach(h => {
+      html += `<div class="time-label">${h}</div>`;
+      dows.forEach((d,i) => {
+        const rand = Math.random();
+        let cls = 'week-slot';
+        let inner = '';
+        if (rand < 0.35) { cls += ' has-appt'; inner = `<span style="font-size:0.7rem;color:var(--charcoal)">Agendado</span>`; }
+        else if (rand < 0.42) { cls += ' blocked'; inner = `<span style="font-size:0.7rem;color:var(--muted)">Bloq.</span>`; }
+        html += `<div class="${cls}">${inner}</div>`;
+      });
+    });
+    document.getElementById('week-grid').innerHTML = html;
+  }
+
+  let currentView = 'day';
+  function setView(v, btn) {
+    currentView = v;
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-day').style.display  = v === 'day'  ? 'block' : 'none';
+    document.getElementById('view-week').style.display = v === 'week' ? 'block' : 'none';
+  }
+
+  function closeModal(e) {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  renderDayTabs();
+  renderTimeline();
+  renderWeekGrid();
+</script>
+</body>
+</html>

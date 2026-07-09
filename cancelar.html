@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cancelar agendamento | BarberPro</title>
+  <meta name="description" content="Cancele ou remarque seu agendamento na BarberPro.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .cancel-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+    .cancel-wrap { max-width: 480px; width: 100%; }
+
+    .state-icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.75rem;
+      margin: 0 auto 24px;
+    }
+    .state-warn    { background: rgba(202,138,4,0.1); border: 1px solid rgba(202,138,4,0.25); }
+    .state-danger  { background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.25); }
+    .state-success { background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.25); }
+
+    .reason-group { display: flex; flex-direction: column; gap: 8px; }
+    .reason-option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-std);
+      cursor: pointer;
+      transition: all 0.12s;
+      font-size: 0.9375rem;
+      color: var(--charcoal);
+    }
+    .reason-option:hover { border-color: var(--c40); background: var(--c04); }
+    .reason-option input[type="radio"] { accent-color: var(--charcoal); }
+    .reason-option.selected { border-color: var(--charcoal); background: var(--c03); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">✂</span>
+      BarberPro
+    </a>
+    <a href="index.html" class="btn btn-ghost btn-sm">← Início</a>
+  </div>
+</nav>
+
+<div class="cancel-page">
+  <div class="cancel-wrap">
+
+    <!-- State: Initial -->
+    <div id="view-initial" class="anim-fade-up">
+      <div class="state-icon state-warn">⚠️</div>
+      <h1 class="heading-2 mb-8 text-center">Cancelar agendamento</h1>
+      <p class="body mb-24 text-center">Tem certeza que deseja cancelar? Esta ação não pode ser desfeita.</p>
+
+      <!-- Booking summary -->
+      <div class="card mb-24">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span class="label">Seu agendamento</span>
+          <span class="badge badge-warn">Agendado</span>
+        </div>
+        <div style="font-size:1rem;font-weight:500;color:var(--charcoal);margin-bottom:4px;" id="canc-servico">Combo — Corte + Barba</div>
+        <div style="font-size:0.875rem;color:var(--muted);" id="canc-datatime">quarta-feira, 09 de julho às 14:30</div>
+        <hr class="divider" style="margin:16px 0 12px;">
+        <div style="font-size:0.875rem;color:var(--muted);" id="canc-nome">João Silva · (11) 99999-9999</div>
+      </div>
+
+      <!-- Antecedência alert -->
+      <div class="alert alert-warn mb-24">
+        <span>⏰</span>
+        <span>Cancelamentos devem ser feitos com pelo menos <strong>2 horas de antecedência</strong>. Após esse prazo não é possível cancelar online.</span>
+      </div>
+
+      <!-- Reason -->
+      <div class="mb-24">
+        <p class="label mb-12">Motivo do cancelamento (opcional)</p>
+        <div class="reason-group">
+          <label class="reason-option" onclick="selectReason(this)">
+            <input type="radio" name="reason" value="horario"> Mudança de horário
+          </label>
+          <label class="reason-option" onclick="selectReason(this)">
+            <input type="radio" name="reason" value="imprevisto"> Imprevisto pessoal
+          </label>
+          <label class="reason-option" onclick="selectReason(this)">
+            <input type="radio" name="reason" value="erro"> Agendei por engano
+          </label>
+          <label class="reason-option" onclick="selectReason(this)">
+            <input type="radio" name="reason" value="outro"> Outro motivo
+          </label>
+        </div>
+      </div>
+
+      <div class="flex gap-12">
+        <a href="index.html" class="btn btn-ghost" style="flex:1;">Manter agendamento</a>
+        <button class="btn btn-danger" style="flex:1;" onclick="confirmCancel()">Cancelar agendamento</button>
+      </div>
+
+      <div class="text-center mt-24">
+        <a href="agendar.html" style="font-size:0.875rem; color:var(--muted);">Prefiro remarcar → Novo agendamento</a>
+      </div>
+    </div>
+
+    <!-- State: Cancelled -->
+    <div id="view-cancelled" style="display:none; text-align:center;" class="anim-fade-up">
+      <div class="state-icon state-success">✓</div>
+      <h1 class="heading-2 mb-12">Agendamento cancelado</h1>
+      <p class="body mb-32">Seu agendamento foi cancelado com sucesso. Esperamos vê-lo em breve!</p>
+
+      <div class="alert alert-success mb-32" style="text-align:left;">
+        <span>📱</span>
+        <span>Você receberá uma confirmação de cancelamento pelo WhatsApp em instantes.</span>
+      </div>
+
+      <a href="agendar.html" class="btn btn-primary btn-lg btn-full mb-12">Fazer novo agendamento</a>
+      <a href="index.html" class="btn btn-ghost btn-full">Voltar ao início</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function selectReason(el) {
+    document.querySelectorAll('.reason-option').forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+    el.querySelector('input').checked = true;
+  }
+
+  function confirmCancel() {
+    document.getElementById('view-initial').style.display   = 'none';
+    document.getElementById('view-cancelled').style.display = 'block';
+  }
+
+  // Load demo data
+  (function() {
+    try {
+      const ag = JSON.parse(sessionStorage.getItem('agendamento') || '{}');
+      if (ag.nome) {
+        document.getElementById('canc-nome').textContent = `${ag.nome} · ${ag.whatsapp}`;
+        if (ag.data) {
+          const d = new Date(ag.data + 'T12:00:00');
+          document.getElementById('canc-datatime').textContent =
+            d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}) + ` às ${ag.hora}`;
+        }
+      }
+    } catch(e) {}
+  })();
+</script>
+</body>
+</html>

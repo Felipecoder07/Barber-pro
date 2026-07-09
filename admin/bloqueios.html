@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloqueios | Painel BarberPro</title>
+  <meta name="description" content="Bloqueie horários manualmente na agenda da BarberPro.">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Quick block buttons */
+    .quick-btns {
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+
+    /* Block cards */
+    .block-item {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    .block-item:last-child { border-bottom: none; }
+    .block-item:hover { background: var(--c03); }
+    .block-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--r-std);
+      background: rgba(28,28,28,0.05);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .block-info { flex: 1; }
+    .block-title { font-size: 0.9375rem; font-weight: 500; color: var(--charcoal); }
+    .block-meta  { font-size: 0.8125rem; color: var(--muted); margin-top: 2px; }
+
+    /* Repeat options */
+    .repeat-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.12s;
+      background: var(--cream);
+      color: var(--muted);
+    }
+    .repeat-chip.selected {
+      background: var(--charcoal);
+      color: var(--off-white);
+      border-color: var(--charcoal);
+    }
+
+    /* Business hours */
+    .hours-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .hours-row:last-child { border-bottom: none; }
+    .day-name { width: 80px; font-size: 0.875rem; font-weight: 500; color: var(--charcoal); }
+    .hours-time { display: flex; align-items: center; gap: 8px; flex: 1; }
+    .hours-time input[type="time"] {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: var(--r-std);
+      padding: 6px 10px;
+      font-family: var(--font);
+      font-size: 0.875rem;
+      color: var(--charcoal);
+      cursor: pointer;
+      min-height: 36px;
+    }
+    .hours-time input:focus { outline: none; border-color: var(--c40); }
+    .day-toggle { margin-left: auto; }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="agenda.html">
+      <span class="logo-mark">✂</span>
+      BarberPro
+    </a>
+    <ul class="sidebar-nav">
+      <li><a href="agenda.html"><span class="icon">📅</span> Agenda</a></li>
+      <li><a href="servicos.html"><span class="icon">✂</span> Serviços</a></li>
+      <li><a href="bloqueios.html" class="active"><span class="icon">🚫</span> Bloqueios</a></li>
+      <li style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+        <a href="../index.html"><span class="icon">🌐</span> Site do cliente</a>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <div style="font-size:0.8125rem; color:var(--muted); margin-bottom:8px;">Logado como</div>
+      <div style="font-size:0.875rem; font-weight:500; color:var(--charcoal);">Admin</div>
+      <a href="login.html" class="btn btn-ghost btn-sm btn-full mt-8">Sair</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <div style="font-size:1rem; font-weight:600; color:var(--charcoal);">Bloqueios de Horário</div>
+        <div class="caption">Bloqueie folgas, almoço e horários indisponíveis</div>
+      </div>
+      <button class="btn btn-primary" onclick="openBlockModal()">+ Novo bloqueio</button>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- Quick-add section -->
+      <div class="card mb-24">
+        <div style="font-size:0.875rem; font-weight:500; margin-bottom:16px;">Bloqueio rápido — Hoje</div>
+        <div class="quick-btns">
+          <button class="btn btn-pill" onclick="quickBlock('almoço')">🍽 Almoço (12:00–13:00)</button>
+          <button class="btn btn-pill" onclick="quickBlock('manha')">🌅 Manhã toda</button>
+          <button class="btn btn-pill" onclick="quickBlock('tarde')">🌇 Tarde toda</button>
+          <button class="btn btn-pill" onclick="quickBlock('dia')">📅 Dia todo</button>
+        </div>
+        <div id="quick-alert" class="alert alert-success mt-16" style="display:none;">
+          ✓ Bloqueio adicionado com sucesso!
+        </div>
+      </div>
+
+      <!-- Two columns -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+
+        <!-- Existing blocks -->
+        <div>
+          <h2 class="heading-3 mb-16" style="font-size:1rem; font-weight:600;">Bloqueios ativos</h2>
+          <div class="card" style="padding:0; overflow:hidden;" id="blocks-list">
+            <!-- injected by JS -->
+          </div>
+        </div>
+
+        <!-- Business hours -->
+        <div>
+          <h2 class="heading-3 mb-16" style="font-size:1rem; font-weight:600;">Horário de funcionamento</h2>
+          <div class="card">
+            <div class="hours-row">
+              <span class="day-name">Segunda</span>
+              <div class="hours-time">
+                <input type="time" value="08:00"> <span class="muted caption">até</span> <input type="time" value="18:00">
+              </div>
+              <label class="toggle day-toggle" title="Aberto">
+                <input type="checkbox" checked onchange="toggleDay(this, 'seg')"><span class="slider"></span>
+              </label>
+            </div>
+            <div class="hours-row">
+              <span class="day-name">Terça</span>
+              <div class="hours-time">
+                <input type="time" value="08:00"> <span class="muted caption">até</span> <input type="time" value="18:00">
+              </div>
+              <label class="toggle day-toggle">
+                <input type="checkbox" checked><span class="slider"></span>
+              </label>
+            </div>
+            <div class="hours-row">
+              <span class="day-name">Quarta</span>
+              <div class="hours-time">
+                <input type="time" value="08:00"> <span class="muted caption">até</span> <input type="time" value="18:00">
+              </div>
+              <label class="toggle day-toggle">
+                <input type="checkbox" checked><span class="slider"></span>
+              </label>
+            </div>
+            <div class="hours-row">
+              <span class="day-name">Quinta</span>
+              <div class="hours-time">
+                <input type="time" value="08:00"> <span class="muted caption">até</span> <input type="time" value="18:00">
+              </div>
+              <label class="toggle day-toggle">
+                <input type="checkbox" checked><span class="slider"></span>
+              </label>
+            </div>
+            <div class="hours-row">
+              <span class="day-name">Sexta</span>
+              <div class="hours-time">
+                <input type="time" value="08:00"> <span class="muted caption">até</span> <input type="time" value="18:00">
+              </div>
+              <label class="toggle day-toggle">
+                <input type="checkbox" checked><span class="slider"></span>
+              </label>
+            </div>
+            <div class="hours-row">
+              <span class="day-name">Sábado</span>
+              <div class="hours-time">
+                <input type="time" value="08:00"> <span class="muted caption">até</span> <input type="time" value="13:00">
+              </div>
+              <label class="toggle day-toggle">
+                <input type="checkbox" checked><span class="slider"></span>
+              </label>
+            </div>
+            <div class="hours-row">
+              <span class="day-name">Domingo</span>
+              <div class="hours-time" style="color:var(--muted); font-size:0.875rem;">Fechado</div>
+              <label class="toggle day-toggle">
+                <input type="checkbox"><span class="slider"></span>
+              </label>
+            </div>
+            <div class="mt-16">
+              <button class="btn btn-primary btn-full" onclick="saveHours()">Salvar horários</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — New block -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Novo bloqueio de horário</div>
+    <div class="modal-body" style="margin-bottom:0;">
+
+      <div style="display:flex; flex-direction:column; gap:16px; margin-top:16px;">
+        <div class="form-group">
+          <label for="bl-motivo">Motivo *</label>
+          <input class="form-control" type="text" id="bl-motivo" placeholder="Ex: Almoço, Folga, Reunião...">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label for="bl-data">Data *</label>
+            <input class="form-control" type="date" id="bl-data">
+          </div>
+          <div class="form-group">
+            <label>Repetição</label>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+              <span class="repeat-chip selected" onclick="selectRepeat(this,'once')">Uma vez</span>
+              <span class="repeat-chip" onclick="selectRepeat(this,'weekly')">Semanal</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group">
+            <label for="bl-inicio">Horário início *</label>
+            <input class="form-control" type="time" id="bl-inicio" value="12:00">
+          </div>
+          <div class="form-group">
+            <label for="bl-fim">Horário fim *</label>
+            <input class="form-control" type="time" id="bl-fim" value="13:00">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="bl-obs">Observações (opcional)</label>
+          <input class="form-control" type="text" id="bl-obs" placeholder="Visible apenas para o admin">
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer" style="margin-top:24px;">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBlock()">Salvar bloqueio</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const token = sessionStorage.getItem('admin_token');
+  if (!token) window.location.href = 'login.html';
+
+  let blocks = [];
+  let businessHours = {};
+  const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+  async function loadData() {
+    try {
+      const [resBlocks, resHours] = await Promise.all([
+        fetch('/api/admin/blocks', { headers: { 'Authorization': 'Bearer ' + token } }),
+        fetch('/api/admin/settings/hours', { headers: { 'Authorization': 'Bearer ' + token } })
+      ]);
+      
+      if (resBlocks.status === 401) return window.location.href = 'login.html';
+
+      blocks = await resBlocks.json();
+      businessHours = await resHours.json();
+
+      renderBlocks();
+      renderHours();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderBlocks() {
+    if (!blocks.length) {
+      document.getElementById('blocks-list').innerHTML =
+        `<div style="padding:40px;text-align:center;color:var(--muted);">Nenhum bloqueio ativo no momento.</div>`;
+      return;
+    }
+    
+    let html = '';
+    blocks.forEach(b => {
+      let timeDesc = b.date ? `Data: ${b.date}` : (b.repeat === 'WEEKLY' ? 'Semanal' : '');
+      html += `
+      <div class="block-item">
+        <div class="block-icon" style="color:var(--error);">${b.icon || '🚫'}</div>
+        <div class="block-info">
+          <div class="block-title">${b.reason}</div>
+          <div class="block-meta">${timeDesc} · ${b.startTime} às ${b.endTime}</div>
+        </div>
+        <button class="btn btn-sm" onclick="removeBlock(${b.id})" style="background:transparent; border:1px solid var(--border); color:var(--muted);">Remover</button>
+      </div>`;
+    });
+    document.getElementById('blocks-list').innerHTML = html;
+  }
+
+  async function addQuickBlock(type) {
+    let reason, startTime, endTime, icon;
+    const date = new Date().toISOString().split('T')[0];
+
+    if (type === 'almoco') { reason = 'Almoço'; startTime = '12:00'; endTime = '13:00'; icon = '🍔'; }
+    else if (type === 'manha') { reason = 'Manhã Bloqueada'; startTime = '08:00'; endTime = '12:00'; icon = '🌅'; }
+    else if (type === 'tarde') { reason = 'Tarde Bloqueada'; startTime = '13:00'; endTime = '19:00'; icon = '🌇'; }
+    else if (type === 'dia') { reason = 'Dia Bloqueado'; startTime = '00:00'; endTime = '23:59'; icon = '🚫'; }
+
+    try {
+      await fetch('/api/admin/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ reason, date, startTime, endTime, repeat: 'ONCE', icon })
+      });
+      loadData();
+    } catch (e) { console.error(e); }
+  }
+
+  async function removeBlock(id) {
+    if (!confirm('Remover este bloqueio?')) return;
+    try {
+      await fetch(`/api/admin/blocks/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      loadData();
+    } catch (e) { console.error(e); }
+  }
+
+  function openBlockModal() {
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal(e) {
+    if (!e || e.target === document.getElementById('modal')) {
+      document.getElementById('modal').classList.remove('open');
+    }
+  }
+
+  function selectRepeat(el, val) {
+    document.querySelectorAll('.repeat-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('bl-repeat-val').value = val;
+  }
+
+  async function saveBlock() {
+    const reason = document.getElementById('bl-motivo').value.trim();
+    const date = document.getElementById('bl-data').value;
+    const startTime = document.getElementById('bl-inicio').value;
+    const endTime = document.getElementById('bl-fim').value;
+    // const repeat = document.getElementById('bl-repeat-val').value;
+
+    if (!reason || !date || !startTime || !endTime) {
+      return alert('Preencha todos os campos obrigatórios.');
+    }
+
+    try {
+      await fetch('/api/admin/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ reason, date, startTime, endTime, repeat: 'ONCE', icon: '🔒' })
+      });
+      closeModal();
+      loadData();
+    } catch (e) { console.error(e); }
+  }
+
+  function quickBlock(type) {
+    addQuickBlock(type);
+  }
+
+  function renderHours() {
+    let html = '';
+    [1,2,3,4,5,6,0].forEach(d => {
+      const h = businessHours[d];
+      if (!h) return;
+      html += `
+      <div class="hours-row" style="${!h.isOpen ? 'opacity:0.5' : ''}">
+        <span class="day-name">${days[d]}</span>
+        <div class="hours-time">
+          <input type="time" class="input" value="${h.open}" ${!h.isOpen ? 'disabled' : ''} onchange="updateHourVal(${d}, 'open', this.value)">
+          <span style="color:var(--muted)">até</span>
+          <input type="time" class="input" value="${h.close}" ${!h.isOpen ? 'disabled' : ''} onchange="updateHourVal(${d}, 'close', this.value)">
+        </div>
+        <label class="toggle day-toggle">
+          <input type="checkbox" ${h.isOpen ? 'checked' : ''} onchange="toggleDay(${d}, this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>`;
+    });
+    // Injecting into the parent div of existing hours
+    document.querySelector('.card:last-child').innerHTML = html + `<div class="mt-16"><button class="btn btn-primary btn-full" id="btn-save-hours" onclick="saveHours()">Salvar horários</button></div>`;
+  }
+
+  function updateHourVal(day, field, val) {
+    businessHours[day][field] = val;
+  }
+
+  function toggleDay(day, isOpen) {
+    businessHours[day].isOpen = isOpen;
+    renderHours();
+  }
+
+  async function saveHours() {
+    const btn = document.getElementById('btn-save-hours');
+    btn.textContent = 'Salvando...';
+    try {
+      await fetch('/api/admin/settings/hours', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(businessHours)
+      });
+      btn.textContent = '✓ Salvo';
+      setTimeout(() => btn.textContent = 'Salvar horários', 2000);
+      loadData();
+    } catch (e) {
+      console.error(e);
+      btn.textContent = 'Erro ao salvar';
+      setTimeout(() => btn.textContent = 'Salvar horários', 2000);
+    }
+  }
+
+  // Set today as default date on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    const dtInput = document.getElementById('bl-data');
+    if (dtInput) {
+      dtInput.value = today;
+      dtInput.min = today;
+    }
+  });
+
+  loadData();
+</script>
+</body>
+</html>

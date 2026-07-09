@@ -1,0 +1,338 @@
+=== PAGINA 1 ===
+M V P · P R O D U T O D I G I T A L
+Sistema de Agendamento
+para Barbearia
+Reavaliação de escopo, requisitos e stack tecnológica — foco Web Mobile-First
+Documento: Especificação de Requisitos v2 (revisão MVP)
+Preparado por: Luiz Felipe Veríssimo
+Data: Julho de 2026
+Plataforma-alvo: Web responsivo (mobile-first) + Desktop
+Página 1 de 5
+
+=== PAGINA 2 ===
+1. Contexto da Reavaliação
+A primeira versão listou um conjunto amplo de requisitos, cobrindo desde o agendamento básico até dashboards e fidelidade. Para um
+MVP (Produto Mínimo Viável), esse escopo é grande demais: o objetivo do MVP é validar a ideia central — o cliente consegue agendar
+sozinho, sem ligar pro barbeiro — com o menor esforço de desenvolvimento possível.
+Esta versão separa o que é essencial para o lançamento (MVP) do que pode esperar uma Fase 2, revisa requisitos que estavam
+incompletos, adiciona pontos que faltavam (especialmente ligados a comportamento real de barbearia no Brasil) e define a stack
+tecnológica, priorizando experiência mobile sem abrir mão de uma boa experiência no desktop.
+Critério usado para classificar como MVP: "sem isso, o sistema não resolve o problema central do barbeiro (parar de perder tempo/
+clientes com agendamento manual)". Tudo que é otimização, growth ou conveniência extra foi movido para Fase 2. 
+2. O que estava bom vs. o que precisava mudar
+✅ Já estava sólido
+Fluxo central de agendamento (serviço → barbeiro →
+horário → confirmação)
+Bloqueio de conflito de horário (RF12 / RNF06)
+Regras de cancelamento com antecedência mínima
+Painel do barbeiro para bloquear horários (folga/almoço)
+Separação clara entre RF, RNF e RG
+⚠️ Faltava / estava incompleto
+Nenhuma menção a cadastro sem fricção (obrigar criar
+conta é o maior motivo de abandono)
+Sem canal de confirmação via WhatsApp — essencial no
+contexto brasileiro
+Sem regra de janela máxima de agendamento futuro
+Sem tratamento de concorrência real (dois clientes
+clicando no mesmo horário ao mesmo tempo)
+Sem LGPD/consentimento explícito nem política de
+dados
+Sem definição de stack nem de responsividade mobile
+como prioridade
+Dashboard, fidelidade e avaliação misturados com o
+essencial, inflando o MVP
+3. Requisitos Funcionais (RF) — Reavaliados
+MVP
+ obrigatório para o lançamento   
+FASE 2
+ pós-lançamento   
+NOVO
+ não existia na v1
+Cadastro e Acesso
+ID
+Fase
+Descrição
+RF01
+MVP
+O sistema deve permitir agendamento com cadastro mínimo (nome + WhatsApp/telefone), sem exigir senha ou e-
+mail no primeiro acesso — reduz fricção de conversão.
+RF02
+FASE 2
+O sistema pode oferecer conta completa (e-mail/senha) para clientes que queiram ver histórico e favoritos.
+RF03
+MVP
+O sistema deve ter login simples para o barbeiro/admin (usuário e senha) acessar o painel administrativo.
+RF04
+FASE 2
+Recuperação de senha via e-mail para contas administrativas.
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+Página 2 de 5
+
+=== PAGINA 3 ===
+Agendamento (núcleo do MVP)
+ID
+Fase
+Descrição
+RF05
+MVP
+Exibir lista de serviços com nome, duração e preço.
+RF06
+MVP
+Permitir escolher o barbeiro (ou "qualquer disponível", se houver mais de um profissional).
+RF07
+MVP
+Exibir calendário com horários disponíveis, calculados a partir da agenda existente e da duração do serviço.
+RF08
+MVP
+Permitir confirmar o agendamento com um resumo (serviço, barbeiro, data, hora, preço) antes de finalizar.
+RF09
+MVP
+Enviar confirmação automática do agendamento via WhatsApp (canal principal) com fallback por SMS.
+RF10
+MVP
+Permitir que o cliente cancele o agendamento por um link enviado na confirmação (sem precisar login).
+RF10b
+NOVO
+FASE 2
+Permitir remarcação (não só cancelamento) diretamente pelo link, reaproveitando o mesmo fluxo de escolha de
+horário.
+RF11
+MVP
+Enviar lembrete automático via WhatsApp (ex: 2h antes do horário).
+RF12
+MVP
+Impedir agendamento em horário já ocupado, mesmo em caso de duas requisições simultâneas (ver RG08).
+Painel do Barbeiro / Admin
+ID
+Fase
+Descrição
+RF13
+MVP
+Visualizar agenda do dia/semana em uma tela única e simples.
+RF14
+MVP
+Bloquear horários manualmente (folga, almoço, imprevisto).
+RF15
+MVP
+Cadastrar, editar e desativar serviços (nome, preço, duração).
+RF16
+FASE 2
+Cadastrar múltiplos barbeiros (MVP pode assumir barbeiro único, já que reduz complexidade do calendário).
+RF17
+MVP
+Definir horário de funcionamento (dias da semana e horários de abertura/fechamento).
+RF18
+MVP
+Marcar atendimento como "concluído" ou "não compareceu" (no-show), base para RG04.
+RF19
+FASE 2
+Histórico de atendimentos por cliente.
+Fase 2 — Crescimento (fora do MVP)
+ID
+Fase
+Descrição
+RF20
+FASE 2
+Avaliação/nota do cliente após o atendimento.
+RF21
+FASE 2
+Dashboard com número de agendamentos, faturamento estimado, horários de pico.
+RF22
+FASE 2
+Programa de fidelidade (ex: a cada 10 cortes, 1 grátis).
+RF23
+NOVO
+Pagamento antecipado/sinal via Pix para reduzir no-show.
+RF24
+NOVO
+Múltiplas unidades/filiais (multi-tenant).
+4. Requisitos Não Funcionais (RNF) — Reavaliados
+ID
+Fase
+Descrição
+Página 3 de 5
+
+=== PAGINA 4 ===
+RNF01
+MVP
+Mobile-first: o fluxo de agendamento deve ser desenhado primeiro para tela de celular (largura ~360–430px) e
+depois adaptado para desktop — não o contrário.
+RNF02
+MVP
+Responsividade completa: o mesmo site deve se adaptar bem a celular, tablet e desktop (design responsivo, não
+app separado).
+RNF03
+MVP
+Concluir um agendamento em no máximo 3 telas/passos, sem cadastro obrigatório.
+RNF04
+MVP
+Carregamento do calendário de horários em menos de 2 segundos em conexão 4G.
+RNF05
+MVP
+Disponibilidade 24/7 para permitir agendamento a qualquer momento, mesmo com a barbearia fechada.
+RNF06
+MVP
+Senhas administrativas armazenadas com hash (bcrypt); dados pessoais de clientes tratados conforme LGPD.
+RNF07
+MVP
+Consistência: o banco de dados deve garantir, via transação/constraint, que dois agendamentos nunca ocupem o
+mesmo horário do mesmo barbeiro — mesmo sob requisições concorrentes.
+RNF08
+FASE 2
+Escalabilidade para múltiplos barbeiros/unidades sem redesenho da arquitetura.
+RNF09
+MVP
+Compatibilidade com os principais navegadores mobile (Chrome/Safari iOS e Android) e desktop, sem plugins.
+RNF10
+MVP
+Notificações (confirmação/lembrete) enviadas com no máximo 1 minuto de atraso em relação ao evento
+disparador.
+RNF11
+MVP
+Arquitetura em camadas (Controller/Service/Repository), facilitando manutenção e futura expansão.
+RNF12
+NOVO
+FASE 2
+PWA (Progressive Web App): permitir "adicionar à tela inicial" no celular, com ícone e funcionamento quase
+nativo, sem precisar publicar em loja de apps.
+5. Regras de Negócio (RG) — Reavaliadas
+ID
+Fase
+Descrição
+RG01
+MVP
+Um agendamento só é confirmado se o horário estiver dentro do funcionamento da barbearia e do barbeiro
+escolhido.
+RG02
+MVP
+Um agendamento não pode se sobrepor a outro já existente para o mesmo barbeiro.
+RG03
+MVP
+Cancelamento/remarcação só é permitido com antecedência mínima configurável (padrão sugerido: 2 horas).
+RG04
+FASE 2
+Após N faltas (no-show) sem cancelamento prévio, o cliente é bloqueado de agendar online, precisando
+confirmar por telefone.
+RG05
+MVP
+A duração do slot de agendamento é determinada pelo serviço escolhido (ex: corte = 30min, barba = 20min).
+RG06
+FASE 2
+Se houver mais de um barbeiro e o cliente escolher "qualquer disponível", o sistema aloca automaticamente o
+primeiro disponível no horário desejado (regra só se aplica quando RF16 existir).
+RG07
+MVP
+Serviços desativados pelo admin não podem ser selecionados em novos agendamentos, mas continuam no
+histórico.
+RG08
+NOVO
+MVP
+Em caso de duas requisições simultâneas para o mesmo horário, a primeira a ser confirmada no banco (via lock/
+constraint) vence; a segunda recebe erro e é forçada a escolher outro horário — nunca deve haver overbooking
+silencioso.
+RG09
+NOVO
+MVP
+O cliente não pode agendar com menos de X minutos de antecedência do horário desejado (ex: 30 min),
+evitando agendamento em cima da hora que o barbeiro não vê a tempo.
+RG10
+NOVO
+MVP
+O cliente não pode agendar com mais de X dias de antecedência (ex: 30 dias), evitando agenda "poluída" com
+reservas muito distantes.
+RG11
+MVP
+Preços exibidos ao cliente são sempre os vigentes no momento do agendamento; reajustes futuros não alteram
+agendamentos já feitos.
+Página 4 de 5
+
+=== PAGINA 5 ===
+RG12
+NOVO
+FASE 2
+Um barbeiro não pode ser removido do sistema se tiver agendamentos futuros ativos — deve ser inativado, não
+excluído.
+RG13
+NOVO
+MVP
+O cliente deve consentir explicitamente com o uso do WhatsApp/telefone para envio de lembretes (checkbox no
+agendamento), atendendo à LGPD.
+6. Stack Tecnológica Recomendada
+Escolhida priorizando experiência mobile web fluida (sem instalação de app), boa performance no desktop, e reaproveitamento do que
+você já domina dos projetos SIAP e do bot de clínica odontológica.
+Camada
+Tecnologia
+Por quê
+Frontend
+React + Vite + Tailwind CSS
+Tailwind facilita responsividade mobile-first com utilitários (sm:, md:, lg:); Vite dá
+build rápido; você já usou essa combinação na Lista 3 de Web.
+Roteamento
+React Router DOM
+Mesmo que você já usou nos exercícios — poucas telas (Home, Agendar,
+Confirmação, Admin).
+Calendário
+react-day-picker ou FullCalendar (modo
+simplificado)
+Componente pronto para exibir dias/horários disponíveis, evita reinventar UI de
+calendário.
+PWA
+vite-plugin-pwa (Fase 2)
+Permite "adicionar à tela inicial" no celular sem publicar em loja de apps.
+Backend
+Node.js + Express
+Mesma stack do SIAP (frontend) — curva de aprendizado zero, comunidade
+grande, ótimo para APIs REST simples.
+Banco de dados
+PostgreSQL
+Suporta constraints de exclusão (EXCLUDE USING gist) que resolvem RG08
+(concorrência) de forma nativa no banco, não só na aplicação.
+ORM
+Prisma
+Migrações versionadas, tipagem, produtivo para times pequenos/solo.
+Notificações
+WhatsApp
+API oficial do WhatsApp Business
+(Meta) ou Twilio WhatsApp API
+Canal de confirmação/lembrete (RF09, RF11) — é como o cliente brasileiro
+espera ser avisado, mais que e-mail.
+Autenticação admin
+JWT (jsonwebtoken) + bcrypt
+Simples, sem dependência de provedor externo, atende RNF06.
+Hospedagem
+Frontend
+Vercel
+Deploy automático, CDN global, ótimo para SPA React com foco mobile (baixa
+latência).
+Hospedagem
+Backend
+Render
+Você já usa no SIAP; suporta PostgreSQL gerenciado e Node de forma
+simples.
+Monitoramento leve
+UptimeRobot (grátis) (Fase 2)
+Alerta se o site cair, importante pra não perder agendamentos.
+Nota sobre mobile-first na prática: não significa "só funcionar no celular" — significa desenhar o CSS partindo do menor breakpoint e
+adicionando regras para telas maiores (min-width), garantindo que botões de agendamento tenham alvo de toque confortável (mínimo
+44x44px) e que o calendário não exija zoom para tocar num horário. 
+7. Escopo Final do MVP (resumo executivo)
+Entra no MVP: agendamento sem cadastro obrigatório, escolha de serviço/horário, confirmação e lembrete via WhatsApp, cancelamento
+por link, painel simples do barbeiro (agenda + bloqueio de horário + serviços), regras anti-conflito e anti-agendamento de última hora,
+consentimento LGPD básico.
+Fica para Fase 2: múltiplos barbeiros, conta completa do cliente com histórico, dashboard/faturamento, fidelidade, avaliações,
+pagamento via Pix, PWA, multi-unidade.
+Esse recorte permite lançar um produto funcional e testável em semanas, não meses — e cada item da Fase 2 já está mapeado, então
+nada é perdido, só adiado até haver validação de que o barbeiro/clientes realmente usam o sistema.
+Página 5 de 5
+

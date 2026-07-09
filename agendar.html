@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendar — Escolha o serviço | BarberPro</title>
+  <meta name="description" content="Passo 1 de 3: Escolha o serviço que deseja agendar na BarberPro.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page-wrap { min-height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; padding: 40px 0 64px; }
+    .svc-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px 24px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .svc-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+    .svc-icon-wrap {
+      width: 52px; height: 52px;
+      background: var(--c03);
+      border-radius: var(--r-card);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .svc-card.selected .svc-icon-wrap { background: var(--charcoal); }
+    .svc-info { flex: 1; }
+    .svc-title { font-size: 1rem; font-weight: 500; color: var(--charcoal); margin-bottom: 4px; }
+    .svc-meta  { font-size: 0.8125rem; color: var(--muted); }
+    .svc-price-tag {
+      font-size: 1.125rem; font-weight: 600; color: var(--charcoal);
+      letter-spacing: -0.3px;
+    }
+    .svc-check {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      color: transparent;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .svc-card.selected .svc-check {
+      background: var(--charcoal);
+      border-color: var(--charcoal);
+      color: var(--off-white);
+    }
+    .sticky-cta {
+      position: sticky;
+      bottom: 0;
+      background: var(--cream);
+      border-top: 1px solid var(--border);
+      padding: 16px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">✂</span>
+      BarberPro
+    </a>
+    <a href="index.html" class="btn btn-ghost btn-sm">← Voltar</a>
+  </div>
+</nav>
+
+<!-- BODY -->
+<div class="page-body">
+  <div class="container" style="max-width:640px;">
+
+    <!-- Progress -->
+    <div class="progress-bar mb-32 anim-fade-up">
+      <div class="progress-step active">
+        <div class="progress-dot">1</div>
+        <span class="step-label">Serviço</span>
+      </div>
+      <div class="progress-step">
+        <div class="progress-dot">2</div>
+        <span class="step-label">Horário</span>
+      </div>
+      <div class="progress-step">
+        <div class="progress-dot">3</div>
+        <span class="step-label">Confirmação</span>
+      </div>
+    </div>
+
+    <h1 class="heading-2 mb-8 anim-fade-up">Qual serviço você quer?</h1>
+    <p class="body mb-32 anim-fade-up">Selecione um serviço para continuar.</p>
+
+    <!-- Services list -->
+    <div class="card" id="services-list" style="padding:0; overflow:hidden;">
+      <div style="padding:40px; text-align:center;">Carregando serviços...</div>
+    </div>
+
+<script>
+  let services = {};
+
+  async function loadServices() {
+    try {
+      const res = await fetch('/api/services');
+      const data = await res.json();
+      
+      let html = '';
+      data.forEach(svc => {
+        services[svc.id] = svc;
+        html += `
+        <label class="svc-card card-selectable" id="svc-${svc.id}" onclick="selectService(this, ${svc.id})">
+          <input type="radio" name="servico" value="${svc.id}">
+          <div class="svc-icon-wrap">${svc.icon || '💈'}</div>
+          <div class="svc-info">
+            <div class="svc-title">${svc.name}</div>
+            <div class="svc-meta">⏱ ${svc.duration} minutos ${svc.description ? '· ' + svc.description : ''}</div>
+          </div>
+          <div class="svc-price-tag">R$ ${svc.price}</div>
+          <div class="svc-check">✓</div>
+        </label>
+        <hr class="divider" style="margin:0;">`;
+      });
+      document.getElementById('services-list').innerHTML = html;
+    } catch (e) {
+      console.error(e);
+      document.getElementById('services-list').innerHTML = '<div style="padding:24px;text-align:center;">Erro ao carregar serviços.</div>';
+    }
+  }
+
+  function selectService(el, id) {
+    document.querySelectorAll('.svc-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const radio = el.querySelector('input[type="radio"]');
+    radio.checked = true;
+    const svc = services[id];
+    // Update preview
+    document.getElementById('selected-preview').innerHTML =
+      `<strong style="color:var(--charcoal)">${svc.name}</strong> · R$ ${svc.price} · ${svc.duration} min`;
+    // Enable button
+    const btn = document.getElementById('btn-continuar');
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'all';
+    // Save to sessionStorage
+    sessionStorage.setItem('servico', JSON.stringify({ id: svc.id, nome: svc.name, preco: 'R$ '+svc.price, duracao: svc.duration+' min' }));
+  }
+
+  loadServices();
+</script>
+</body>
+</html>

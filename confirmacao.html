@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendar — Confirmação | BarberPro</title>
+  <meta name="description" content="Passo 3 de 3: Informe seus dados e confirme o agendamento.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page-wrap { min-height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; padding: 40px 0 64px; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 32px;
+      align-items: start;
+    }
+
+    /* Summary card */
+    .summary-card { position: sticky; top: 80px; }
+    .summary-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9375rem;
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-label { color: var(--muted); font-size: 0.875rem; }
+    .summary-value { font-weight: 500; color: var(--charcoal); text-align: right; }
+    .summary-total {
+      display: flex; justify-content: space-between;
+      font-size: 1.125rem; font-weight: 600;
+      color: var(--charcoal); letter-spacing: -0.3px;
+      padding-top: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .two-col { grid-template-columns: 1fr; }
+      .summary-card { position: static; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">✂</span>
+      BarberPro
+    </a>
+    <a href="horario.html" class="btn btn-ghost btn-sm">← Voltar</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div class="container" style="max-width:900px;">
+
+    <!-- Progress -->
+    <div class="progress-bar mb-32 anim-fade-up">
+      <div class="progress-step done">
+        <div class="progress-dot">✓</div>
+        <span class="step-label">Serviço</span>
+      </div>
+      <div class="progress-step done">
+        <div class="progress-dot">✓</div>
+        <span class="step-label">Horário</span>
+      </div>
+      <div class="progress-step active">
+        <div class="progress-dot">3</div>
+        <span class="step-label">Confirmação</span>
+      </div>
+    </div>
+
+    <h1 class="heading-2 mb-8 anim-fade-up">Quase lá! Informe seus dados</h1>
+    <p class="body mb-32 anim-fade-up">Sem senha ou e-mail — só nome e WhatsApp para confirmar.</p>
+
+    <div class="two-col">
+      <!-- FORM -->
+      <div class="anim-fade-up">
+        <form id="form-agendamento" onsubmit="handleSubmit(event)">
+
+          <div class="card" style="margin-bottom:16px;">
+            <h2 class="heading-3 mb-24" style="font-weight:500;">Seus dados</h2>
+
+            <div class="form-group mb-16">
+              <label for="nome">Nome completo *</label>
+              <input class="form-control" type="text" id="nome" name="nome"
+                placeholder="Ex: João Silva" autocomplete="name" required minlength="2">
+            </div>
+
+            <div class="form-group mb-16">
+              <label for="whatsapp">WhatsApp *</label>
+              <input class="form-control" type="tel" id="whatsapp" name="whatsapp"
+                placeholder="(11) 99999-9999" autocomplete="tel" required
+                pattern="[\d\s()\-+]{10,15}">
+              <span class="caption" style="margin-top:4px;">Usaremos para enviar confirmação e lembrete.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="obs">Observações (opcional)</label>
+              <textarea class="form-control" id="obs" name="obs" rows="3"
+                placeholder="Ex: prefiro tesoura, tem algum cabelo específico..."></textarea>
+            </div>
+          </div>
+
+          <!-- LGPD Consent — RG13 -->
+          <div class="card mb-16">
+            <h2 class="heading-3 mb-16" style="font-weight:500;">Consentimento</h2>
+            <label class="checkbox-group" id="lgpd-wrap">
+              <input type="checkbox" id="lgpd" name="lgpd" required>
+              <span>
+                Concordo em receber confirmação e lembrete de agendamento via WhatsApp para o número informado. 
+                Seus dados são tratados conforme a <strong style="color:var(--charcoal)">LGPD</strong> e usados exclusivamente para este fim.
+              </span>
+            </label>
+          </div>
+
+          <!-- Cancelamento info -->
+          <div class="alert mb-24">
+            <span>📌</span>
+            <span>Cancelamento ou remarcação deve ser feito com pelo menos <strong>2 horas de antecedência</strong>.</span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full btn-lg" id="btn-confirmar">
+            Confirmar agendamento →
+          </button>
+        </form>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="summary-card anim-fade-up" style="animation-delay:.1s;">
+        <div class="card">
+          <h3 class="heading-3 mb-16" style="font-weight:500; margin-bottom:16px;">Resumo do agendamento</h3>
+
+          <div class="summary-row">
+            <span class="summary-label">Serviço</span>
+            <span class="summary-value" id="sum-servico">—</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Data</span>
+            <span class="summary-value" id="sum-data">—</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Horário</span>
+            <span class="summary-value" id="sum-hora">—</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Duração</span>
+            <span class="summary-value" id="sum-duracao">—</span>
+          </div>
+          <div class="divider" style="margin:8px 0;"></div>
+          <div class="summary-total">
+            <span>Total</span>
+            <span id="sum-total">—</span>
+          </div>
+        </div>
+
+        <div class="alert alert-warn mt-16">
+          <span>ℹ️</span>
+          <span style="font-size:0.8125rem;">Você receberá um lembrete automático 2h antes do atendimento no seu WhatsApp.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /page-wrap -->
+
+<script>
+  function loadSummary() {
+    try {
+      const svc = JSON.parse(sessionStorage.getItem('servico') || '{}');
+      const hor = JSON.parse(sessionStorage.getItem('horario') || '{}');
+
+      if (svc.nome) {
+        document.getElementById('sum-servico').textContent = svc.nome;
+        document.getElementById('sum-duracao').textContent = svc.duracao || '—';
+        document.getElementById('sum-total').textContent   = svc.preco || '—';
+      }
+      if (hor.data) {
+        const d = new Date(hor.data + 'T12:00:00');
+        document.getElementById('sum-data').textContent = d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
+      }
+      if (hor.hora) {
+        document.getElementById('sum-hora').textContent = hor.hora;
+      }
+    } catch(e) {}
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-confirmar');
+    btn.textContent = 'Confirmando...';
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+
+    const svc = JSON.parse(sessionStorage.getItem('servico') || '{}');
+    const hor = JSON.parse(sessionStorage.getItem('horario') || '{}');
+    const nome = document.getElementById('nome').value;
+    const whatsapp = document.getElementById('whatsapp').value;
+    const obs = document.getElementById('obs').value;
+
+    try {
+      const res = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome, whatsapp, obs,
+          serviceId: svc.id,
+          data: hor.data,
+          hora: hor.hora
+        })
+      });
+
+      const data = await res.json();
+      
+      if (res.ok) {
+        sessionStorage.setItem('agendamento', JSON.stringify({ nome, whatsapp, obs, ...svc, ...hor, id: data.appointment.id }));
+        window.location.href = 'sucesso.html';
+      } else {
+        alert(data.error || 'Erro ao agendar. Tente novamente.');
+        btn.textContent = 'Confirmar agendamento →';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Erro de conexão. Verifique sua internet.');
+      btn.textContent = 'Confirmar agendamento →';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+
+  // WhatsApp mask
+  document.getElementById('whatsapp').addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g,'').slice(0,11);
+    if (v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+    else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+    else if (v.length > 0) v = `(${v}`;
+    e.target.value = v;
+  });
+
+  loadSummary();
+</script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serviços | Painel BarberPro</title>
+  <meta name="description" content="Gerencie os serviços oferecidos pela BarberPro.">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .svc-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    .svc-row:last-child { border-bottom: none; }
+    .svc-row:hover { background: var(--c03); }
+
+    .svc-row-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--r-std);
+      background: var(--c04);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+    .svc-row-info { flex: 1; min-width: 0; }
+    .svc-row-name { font-size: 0.9375rem; font-weight: 500; color: var(--charcoal); }
+    .svc-row-meta { font-size: 0.8125rem; color: var(--muted); margin-top: 2px; }
+    .svc-row-price { font-size: 1rem; font-weight: 600; letter-spacing: -0.2px; color: var(--charcoal); min-width: 56px; text-align: right; }
+    .svc-row-actions { display: flex; gap: 6px; }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative; display: inline-block;
+      width: 40px; height: 22px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      cursor: pointer;
+      background: var(--border);
+      border-radius: var(--r-pill);
+      transition: background 0.2s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked + .slider { background: var(--charcoal); }
+    .toggle input:checked + .slider::before { transform: translateX(18px); }
+
+    /* Modal form */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="agenda.html">
+      <span class="logo-mark">✂</span>
+      BarberPro
+    </a>
+    <ul class="sidebar-nav">
+      <li><a href="agenda.html"><span class="icon">📅</span> Agenda</a></li>
+      <li><a href="servicos.html" class="active"><span class="icon">✂</span> Serviços</a></li>
+      <li><a href="bloqueios.html"><span class="icon">🚫</span> Bloqueios</a></li>
+      <li style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+        <a href="../index.html"><span class="icon">🌐</span> Site do cliente</a>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      <div style="font-size:0.8125rem; color:var(--muted); margin-bottom:8px;">Logado como</div>
+      <div style="font-size:0.875rem; font-weight:500; color:var(--charcoal);">Admin</div>
+      <a href="login.html" class="btn btn-ghost btn-sm btn-full mt-8">Sair</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <div style="font-size:1rem; font-weight:600; color:var(--charcoal);">Serviços</div>
+        <div class="caption">Cadastre, edite e ative/desative serviços</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">+ Novo serviço</button>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- Info note -->
+      <div class="alert mb-24">
+        <span>ℹ️</span>
+        <span>Serviços desativados não aparecem para novos agendamentos, mas são preservados no histórico de atendimentos.</span>
+      </div>
+
+      <!-- Services list -->
+      <div class="card" style="padding:0; overflow:hidden;" id="services-list">
+        <!-- injected by JS -->
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Add/Edit service -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:520px;">
+    <div class="modal-title" id="modal-title">Novo serviço</div>
+    <div class="modal-body" style="margin-bottom:0;">
+
+      <div class="form-stack" style="display:flex; flex-direction:column; gap:16px; margin-top:16px;">
+
+        <div class="form-group">
+          <label for="svc-nome-input">Nome do serviço *</label>
+          <input class="form-control" type="text" id="svc-nome-input" placeholder="Ex: Corte de cabelo" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="svc-preco-input">Preço (R$) *</label>
+            <input class="form-control" type="number" id="svc-preco-input" placeholder="35" min="0" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="svc-duracao-input">Duração (minutos) *</label>
+            <input class="form-control" type="number" id="svc-duracao-input" placeholder="30" min="5" step="5" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="svc-desc-input">Descrição (opcional)</label>
+          <textarea class="form-control" id="svc-desc-input" rows="2" placeholder="Ex: Tesoura ou máquina, acabamento incluído"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="svc-icon-input">Emoji / Ícone</label>
+          <input class="form-control" type="text" id="svc-icon-input" placeholder="💈" maxlength="2" style="font-size:1.5rem; text-align:center; width:80px;">
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer" style="margin-top:24px;">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveService()">Salvar serviço</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let services = [];
+  let editingId = null;
+  const token = sessionStorage.getItem('admin_token');
+  if (!token) window.location.href = 'login.html';
+
+  async function loadServices() {
+    try {
+      const res = await fetch('/api/admin/services', { headers: { 'Authorization': 'Bearer ' + token } });
+      if (res.status === 401) return window.location.href = 'login.html';
+      services = await res.json();
+      renderServices();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderServices() {
+    if (!services.length) {
+      document.getElementById('services-list').innerHTML =
+        `<div style="padding:40px; text-align:center; color:var(--muted);">Nenhum serviço cadastrado. Clique em "Novo serviço" para começar.</div>`;
+      return;
+    }
+    let html = '';
+    services.forEach(s => {
+      html += `
+      <div class="svc-row" id="row-${s.id}" style="${!s.active?'opacity:0.5':''}">
+        <div class="svc-row-icon">${s.icon || '💈'}</div>
+        <div class="svc-row-info">
+          <div class="svc-row-name">${s.name}</div>
+          <div class="svc-row-meta">⏱ ${s.duration} min${s.description ? ' · '+s.description : ''}</div>
+        </div>
+        <div class="svc-row-price">R$ ${Number(s.price).toFixed(2).replace('.',',')}</div>
+        <label class="toggle" title="${s.active?'Desativar':'Ativar'} serviço">
+          <input type="checkbox" ${s.active?'checked':''} onchange="toggleActive(${s.id}, this.checked)">
+          <span class="slider"></span>
+        </label>
+        <div class="svc-row-actions">
+          <button class="btn btn-cream btn-sm" onclick="editService(${s.id})" title="Editar">✏️</button>
+          <button class="btn btn-sm" onclick="deleteService(${s.id})" title="Excluir"
+            style="background:transparent; border:1px solid var(--border); color:var(--muted);">🗑</button>
+        </div>
+      </div>`;
+    });
+    document.getElementById('services-list').innerHTML = html;
+  }
+
+  async function toggleActive(id, active) {
+    const s = services.find(s => s.id === id);
+    if (!s) return;
+    s.active = active;
+    try {
+      await fetch('/api/admin/services/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(s)
+      });
+      renderServices();
+    } catch(e) { console.error(e); }
+  }
+
+  async function deleteService(id) {
+    if (!confirm('Deseja excluir este serviço? Esta ação não pode ser desfeita.')) return;
+    try {
+      await fetch('/api/admin/services/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      loadServices();
+    } catch(e) { console.error(e); }
+  }
+
+  function editService(id) {
+    const s = services.find(s => s.id === id);
+    if (!s) return;
+    editingId = id;
+    document.getElementById('modal-title').textContent = 'Editar serviço';
+    document.getElementById('svc-nome-input').value    = s.name;
+    document.getElementById('svc-preco-input').value   = s.price;
+    document.getElementById('svc-duracao-input').value = s.duration;
+    document.getElementById('svc-desc-input').value    = s.description || '';
+    document.getElementById('svc-icon-input').value    = s.icon || '';
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function openModal() {
+    editingId = null;
+    document.getElementById('modal-title').textContent = 'Novo serviço';
+    ['svc-nome-input','svc-preco-input','svc-duracao-input','svc-desc-input'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('svc-icon-input').value = '💈';
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal(e) {
+    if (!e || e.target === document.getElementById('modal'))
+      document.getElementById('modal').classList.remove('open');
+  }
+
+  async function saveService() {
+    const name    = document.getElementById('svc-nome-input').value.trim();
+    const price   = parseFloat(document.getElementById('svc-preco-input').value);
+    const duration = parseInt(document.getElementById('svc-duracao-input').value);
+    const description    = document.getElementById('svc-desc-input').value.trim();
+    const icon    = document.getElementById('svc-icon-input').value.trim() || '💈';
+
+    if (!name || isNaN(price) || isNaN(duration)) {
+      alert('Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    const payload = { name, price, duration, description, icon, active: true };
+    const method = editingId ? 'PUT' : 'POST';
+    const url = editingId ? '/api/admin/services/' + editingId : '/api/admin/services';
+
+    try {
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(payload)
+      });
+      document.getElementById('modal').classList.remove('open');
+      loadServices();
+    } catch(e) { console.error(e); }
+  }
+
+  loadServices();
+</script>
+</body>
+</html>
